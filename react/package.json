@@ -1,11 +1,12 @@
 {
   "name": "@aria-iam/react",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ARIA authentication React adapter — AuthProvider, ProtectedRoute and useAuth hook",
   "main": "src/index.ts",
   "types": "src/index.ts",
   "files": [
-    "src"
+    "src",
+    "README.pt.md"
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
