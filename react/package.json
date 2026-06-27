@@ -1,22 +1,48 @@
 {
   "name": "@aria-iam/react",
   "version": "1.0.0",
-  "description": "Adaptador React para o núcleo de autenticação ARIA",
+  "description": "ARIA authentication React adapter — AuthProvider, ProtectedRoute and useAuth hook",
   "main": "src/index.ts",
   "types": "src/index.ts",
+  "files": [
+    "src"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "iam",
+    "auth",
+    "authentication",
+    "jwt",
+    "sso",
+    "react",
+    "typescript"
+  ],
+  "author": {
+    "name": "Sara David Tuma",
+    "url": "https://github.com/SaraTuma"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SaraTuma/aria-sdk.git",
+    "directory": "react"
+  },
+  "homepage": "https://github.com/SaraTuma/aria-sdk#readme",
+  "bugs": {
+    "url": "https://github.com/SaraTuma/aria-sdk/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@aria-iam/core": "*"
   },
   "peerDependencies": {
-    "@types/react": "^19.2.14",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "typescript": "^6.0.2"
+    "@types/react": "^18.0.0 || ^19.0.0",
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0",
+    "typescript": "^5.0.0"
   }
 }

@@ -2,16 +2,14 @@ import React, { useEffect } from "react";
 import { redirectToLogin } from "@aria-iam/core";
 import { useAuth } from "./AuthProvider";
 
-const LOGIN_URL = "http://localhost:3001/login";
-
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { status, appId } = useAuth();
+  const { status, appId, loginUrl } = useAuth();
 
   useEffect(() => {
     if (status === "unauthorized" || status === "unauthenticated") {
-      redirectToLogin(LOGIN_URL, appId);
+      redirectToLogin(loginUrl, appId);
     }
-  }, [status, appId]);
+  }, [status, appId, loginUrl]);
 
   if (status === "checking") {
     return (

@@ -5,22 +5,28 @@ interface AuthContextType {
   status: SessionStatus;
   user: unknown;
   appId: string;
+  loginUrl: string;
+  tokenNamespace?: string;
 }
 
 export const AuthContext = createContext<AuthContextType>({
   status: "checking",
   user: null,
   appId: "",
+  loginUrl: "",
+  tokenNamespace: undefined,
 });
 
 export const AuthProvider = ({
   children,
   apiUrl,
+  loginUrl,
   appId,
   tokenNamespace,
 }: {
   children: React.ReactNode;
   apiUrl: string;
+  loginUrl: string;
   appId: string;
   tokenNamespace?: string;
 }) => {
@@ -35,7 +41,7 @@ export const AuthProvider = ({
   }, [apiUrl, tokenNamespace]);
 
   return (
-    <AuthContext.Provider value={{ status, user, appId }}>
+    <AuthContext.Provider value={{ status, user, appId, loginUrl, tokenNamespace }}>
       {children}
     </AuthContext.Provider>
   );
