@@ -1,0 +1,49 @@
+{
+  "name": "@aria-iam/angular",
+  "version": "1.0.0",
+  "description": "ARIA authentication Angular adapter — AuthService, authGuard, AuthInterceptor and CanPipe",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "files": [
+    "src",
+    "README.pt.md"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "iam",
+    "auth",
+    "authentication",
+    "jwt",
+    "sso",
+    "angular",
+    "typescript"
+  ],
+  "author": {
+    "name": "Sara David Tuma",
+    "url": "https://github.com/SaraTuma"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SaraTuma/aria-sdk.git",
+    "directory": "angular"
+  },
+  "homepage": "https://github.com/SaraTuma/aria-sdk#readme",
+  "bugs": {
+    "url": "https://github.com/SaraTuma/aria-sdk/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@aria-iam/core": "^1.0.1"
+  },
+  "peerDependencies": {
+    "@angular/common": "^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
+    "@angular/core": "^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
+    "rxjs": "^7.0.0",
+    "typescript": "^5.0.0"
+  }
+}

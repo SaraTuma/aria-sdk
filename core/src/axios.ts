@@ -39,14 +39,6 @@ export function createAriaAxios({
       }
 
       if (error.response?.status === 401 && !original._retry) {
-        const refreshToken = getRefreshToken(namespace);
-
-        if (!refreshToken) {
-          clearTokens(namespace);
-          redirectToLogin(loginUrl);
-          return Promise.reject(error);
-        }
-
         if (isRefreshing) {
           return new Promise<string>((resolve, reject) => {
             failedQueue.push({ resolve, reject });
@@ -54,6 +46,14 @@ export function createAriaAxios({
             original.headers["Authorization"] = `Bearer ${token}`;
             return instance(original);
           });
+        }
+
+        const refreshToken = getRefreshToken(namespace);
+
+        if (!refreshToken) {
+          clearTokens(namespace);
+          redirectToLogin(loginUrl);
+          return Promise.reject(error);
         }
 
         original._retry = true;

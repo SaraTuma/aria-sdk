@@ -9,9 +9,9 @@ SDK de autenticação e controlo de acessos para aplicações que integram com a
 | Pacote | Descrição |
 |---|---|
 | [`@aria-iam/core`](./core) | Núcleo TypeScript independente de framework — tokens, sessão, JWT, axios, SSO |
-| [`@aria-iam/react`](./react) | Adaptador React — providers, guards e hooks prontos a usar |
-
-> **Em breve:** `@aria-iam/vue` · `@aria-iam/angular`
+| [`@aria-iam/react`](./react) | Adaptador React — `AuthProvider`, `ProtectedRoute`, `PermissionProvider`, `FuncionalidadeGuard` |
+| [`@aria-iam/angular`](./angular) | Adaptador Angular — `AuthService`, `authGuard`, `AuthInterceptor`, `CanPipe` |
+| [`@aria-iam/vue`](./vue) | Adaptador Vue 3 — `AriaIamPlugin`, `useAuth`, `usePermissions`, `ProtectedRoute` |
 
 ---
 
