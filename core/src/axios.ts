@@ -60,8 +60,7 @@ export function createAriaAxios({
         isRefreshing = true;
 
         try {
-          const { data } = await axios.get(`${apiUrl}/auth/refresh-token`, {
-            params: { refreshToken },
+          const { data } = await axios.post(`${apiUrl}/auth/refresh-token`, { refreshToken }, {
             headers: { "Content-Type": "application/json" },
           });
 
