@@ -4,3 +4,4 @@ export { useAuth } from "./composables/useAuth";
 export { usePermissions, useCan } from "./composables/usePermissions";
 export { vCan } from "./directives/can";
 export { default as ProtectedRoute } from "./components/ProtectedRoute.vue";
+export { default as FuncionalidadeGuard } from "./components/FuncionalidadeGuard.vue";

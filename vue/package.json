@@ -1,6 +1,6 @@
 {
   "name": "@aria-iam/vue",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "ARIA authentication Vue 3 adapter — AriaIamPlugin, useAuth, usePermissions and ProtectedRoute",
   "main": "src/index.ts",
   "types": "src/index.ts",
