@@ -1,7 +1,6 @@
 import { jwtDecode } from "jwt-decode";
 import {
   getToken,
-  getRefreshToken,
   getTokensFromUrl,
   setTokens,
   clearTokens,
@@ -47,7 +46,6 @@ export async function validateSession(
   }
 
   const token = tokenFromUrl || getToken(namespace);
-  const refreshToken = refreshFromUrl || getRefreshToken(namespace);
 
   if (!token) {
     return { status: "unauthenticated", user: null };
@@ -57,12 +55,20 @@ export async function validateSession(
     const response = await fetch(`${apiUrl}/auth/validate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, uri: window.location.origin }),
+      body: JSON.stringify({ token, urlBackendServidor: window.location.origin }),
     });
 
     if (response.ok) {
-      const user = await response.json();
-      return { status: "authorized", user };
+      const json = await response.json();
+      const internalCode = json?.retorno?.codigo;
+
+      // Backend may return HTTP 200 even for invalid tokens; check internal code
+      if (internalCode != null && internalCode >= 400) {
+        clearTokens(namespace);
+        return { status: "unauthorized", user: null };
+      }
+
+      return { status: "authorized", user: json?.data ?? json };
     }
 
     // Explicit rejection — token is invalid on the server
@@ -71,7 +77,7 @@ export async function validateSession(
       return { status: "unauthorized", user: null };
     }
 
-    // 404 or other server error — endpoint may not exist, fall back to local
+    // 400 (field mismatch) or other server error — fall back to local validation
   } catch {
     // Network error or CORS — fall back to local JWT validation
   }
