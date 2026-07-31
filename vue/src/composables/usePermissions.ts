@@ -4,6 +4,8 @@ import { ariaState } from "../plugin";
 
 const allowed = ref<number[]>([]);
 const loading = ref(false);
+// true after the first load() call completes — guards must not act before this
+const ready = ref(false);
 let loadPromise: Promise<void> | null = null;
 
 export function usePermissions() {
@@ -25,6 +27,7 @@ export function usePermissions() {
         allowed.value = await fetchPermissions(pkConta, appId);
       } finally {
         loading.value = false;
+        ready.value = true;
       }
     })();
     return loadPromise;
@@ -37,6 +40,7 @@ export function usePermissions() {
   return {
     allowed: readonly(allowed),
     loading: readonly(loading),
+    ready: readonly(ready),
     can,
     load,
     refresh: load,

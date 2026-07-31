@@ -13,13 +13,13 @@ const props = withDefaults(
     currentPath?: string;
   }>(),
   {
-    redirectTo: "/dashboard",
+    redirectTo: "/sem-acesso",
     delayMs: 3000,
     isVisible: false,
   }
 );
 
-const { can, loading } = usePermissions();
+const { can, loading, ready } = usePermissions();
 
 const isPermitido = computed(() => can(props.pkFuncionalidade) || props.isVisible);
 
@@ -31,14 +31,16 @@ const jaNoDestino = computed(() => pathname.value === props.redirectTo);
 let timer: ReturnType<typeof setTimeout> | null = null;
 
 watch(
-  [() => loading.value, isPermitido, jaNoDestino],
-  ([isLoading, permitido, noDestino]) => {
+  [() => loading.value, () => ready.value, isPermitido, jaNoDestino],
+  ([isLoading, isReady, permitido, noDestino]) => {
     if (timer) { clearTimeout(timer); timer = null; }
-    if (!isLoading && !permitido && !noDestino) {
-      timer = setTimeout(() => {
-        window.location.href = props.redirectTo;
-      }, props.delayMs);
-    }
+    // Only act after permissions have been loaded at least once.
+    // Without this guard, the watch would fire immediately on mount
+    // (loading=false, allowed=[]) and redirect before load() is called.
+    if (!isReady || isLoading || permitido || noDestino) return;
+    timer = setTimeout(() => {
+      window.location.href = props.redirectTo;
+    }, props.delayMs);
   },
   { immediate: true }
 );
@@ -47,10 +49,11 @@ onUnmounted(() => { if (timer) clearTimeout(timer); });
 </script>
 
 <template>
-  <template v-if="loading" />
+  <!-- While permissions haven't loaded yet, render nothing (no redirect, no flash) -->
+  <template v-if="!ready || loading" />
 
   <template v-else-if="!isPermitido">
-    <!-- Já está na página de destino — UI terminal sem redirect -->
+    <!-- Already at the redirect destination — terminal UI, no further redirect -->
     <div v-if="jaNoDestino" style="display:flex;height:60vh;align-items:center;justify-content:center;">
       <div style="max-width:28rem;text-align:center;">
         <h2 style="font-size:1.125rem;font-weight:600;color:#374151;margin-bottom:0.5rem;">
@@ -62,7 +65,7 @@ onUnmounted(() => { if (timer) clearTimeout(timer); });
       </div>
     </div>
 
-    <!-- Outra página — mostra mensagem e redireciona -->
+    <!-- Other page — show message while the redirect timer runs -->
     <div v-else style="display:flex;height:60vh;align-items:center;justify-content:center;">
       <div style="max-width:28rem;text-align:center;">
         <h2 style="font-size:1.125rem;font-weight:600;color:#EF4444;margin-bottom:0.5rem;">

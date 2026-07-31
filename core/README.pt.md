@@ -6,6 +6,15 @@ Núcleo TypeScript independente de framework para a plataforma **ARIA IAM**. Ger
 
 Parte do [ARIA SDK](https://github.com/SaraTuma/aria-sdk).
 
+## Pré-requisitos
+
+Antes de usar este pacote precisas de:
+
+1. Um **backend ARIA IAM** a correr e acessível (fornecido pela tua organização).
+2. Uma **aplicação registada** no painel de administração ARIA — isso dá-te o `appId` (ID numérico) e o `loginUrl` (a página de login central do ARIA).
+
+> Se usas React, Angular ou Vue, instala antes o adaptador correspondente — já inclui este pacote e acrescenta funções específicas do framework. Usa `@aria-iam/core` diretamente só se estiveres a trabalhar com um framework ainda não suportado ou precisares de controlo de baixo nível.
+
 ## Instalação
 
 ```bash
@@ -77,6 +86,14 @@ const pkConta = getPkContaFromToken("priv_2_minha-app");
 | Função | Descrição |
 |---|---|
 | `buildNamespacedCookieKey(key, namespace?)` | Constrói o nome namespaced de um cookie, ex: `iam_accessToken__priv_2_tickets` |
+
+## Como funciona o fluxo de sessão
+
+1. O utilizador visita a tua app → `validateSession` procura um token nos cookies.
+2. Sem token → `redirectToLogin` envia o utilizador para a página de login do ARIA.
+3. Depois do login, o ARIA redireciona de volta para a tua app com os tokens na URL (`?iam_accessToken=...&iam_refreshToken=...`).
+4. `getTokensFromUrl` lê-os, `setTokens` guarda-os como cookies, `cleanUrlTokens` remove-os da URL.
+5. As chamadas seguintes através de `createAriaAxios` usam o token guardado automaticamente.
 
 ## Namespace de cookies
 

@@ -6,11 +6,25 @@ React adapter for the **ARIA IAM** platform. Provides ready-to-use providers, gu
 
 Part of the [ARIA SDK](https://github.com/SaraTuma/aria-sdk).
 
+## Prerequisites
+
+Before using this package you need:
+
+1. An **ARIA IAM backend** running and accessible (provided by your organisation).
+2. An **application registered** in the ARIA admin panel — this gives you:
+   - `appId` — the numeric ID of your app in ARIA (e.g. `2`).
+   - `loginUrl` — the URL of the ARIA central login page.
+3. **Permissions registered** in the ARIA panel for your app. Each permission has a `pkFuncionalidade` — a numeric ID (e.g. `14`) that you use in your code to show or hide UI elements.
+
+> **Note on `appId`:** this value is used in two different shapes. On `<AuthProvider appId>` it's a **string** (it gets stored in a cookie that tells the ARIA login page which app you're coming from). On `<PermissionProvider appId>` and inside your `fetchPermissions` callback, it's a **number** (it gets sent to your backend as `pkAplicacao`). Both refer to the same app ID — just keep the types straight when copying the examples below.
+
 ## Installation
 
 ```bash
 npm install @aria-iam/core @aria-iam/react
 ```
+
+> Requires React 18 or 19 and TypeScript ≥ 5.0.
 
 ## Quick start
 
@@ -19,20 +33,31 @@ npm install @aria-iam/core @aria-iam/react
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider, ProtectedRoute, PermissionProvider } from "@aria-iam/react";
+import { createAriaAxios } from "@aria-iam/core";
+
+const APP_ID = 2; // numeric ID from the ARIA admin panel
+const API_URL = "https://your-aria-backend.com";
+const LOGIN_URL = "https://your-aria-panel.com/login";
+const NS = "priv_2_my-app"; // cookie isolation key
+
+const api = createAriaAxios({ apiUrl: API_URL, loginUrl: LOGIN_URL, namespace: NS });
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
     <AuthProvider
-      apiUrl="https://your-aria-backend.com"
-      loginUrl="https://your-aria-panel.com/login"
-      appId="your-app-id"
-      tokenNamespace="priv_2_my-app"
+      apiUrl={API_URL}
+      loginUrl={LOGIN_URL}
+      appId={String(APP_ID)}  // AuthProvider expects a string (stored in a cookie)
+      tokenNamespace={NS}
     >
       <PermissionProvider
-        appId={2}
+        appId={APP_ID}
         fetchPermissions={(pkConta, appId) =>
-          fetch(`/api/permissions?pkConta=${pkConta}&appId=${appId}`)
-            .then(r => r.json())
+          api
+            .get(`/conta-funcionalidade/buscar-pksfuncionalidade-conta`, {
+              params: { pkConta, pkAplicacao: appId },
+            })
+            .then(r => r.data.data as number[])
         }
       >
         <ProtectedRoute>
@@ -52,16 +77,16 @@ Validates the session on load. All other components and hooks must be nested ins
 
 ```tsx
 <AuthProvider
-  apiUrl="https://your-aria-backend.com"       // required — ARIA backend URL
+  apiUrl="https://your-aria-backend.com"       // required — your ARIA backend URL
   loginUrl="https://your-aria-panel.com/login" // required — ARIA login page URL
-  appId="your-app-id"                          // required — app identifier in ARIA
-  tokenNamespace="priv_2_my-app"              // optional — cookie isolation key
+  appId="2"                                    // required — app ID as a string (stored in a cookie)
+  tokenNamespace="priv_2_my-app"               // optional — cookie isolation key
 >
 ```
 
 ### `<ProtectedRoute>`
 
-Redirects to the login page if the session is not valid. Place it around the app tree.
+Redirects to the login page if the session is not valid. Wrap it around the app tree.
 
 ```tsx
 <ProtectedRoute>
@@ -76,15 +101,23 @@ Loads the user's permissions for the current app. Must be nested inside `<AuthPr
 ```tsx
 <PermissionProvider
   appId={2}
-  fetchPermissions={(pkConta, appId) => myApi.getPermissions(pkConta, appId)}
+  fetchPermissions={(pkConta, appId) =>
+    api
+      .get("/conta-funcionalidade/buscar-pksfuncionalidade-conta", {
+        params: { pkConta, pkAplicacao: appId },
+      })
+      .then(r => r.data.data as number[])
+  }
 >
 ```
 
-`fetchPermissions` receives the account ID decoded from the JWT and the app ID, and must return a `Promise<number[]>` — the list of allowed `pkFuncionalidade` values.
+`fetchPermissions` receives the account ID (from the JWT) and the app ID, and must return `Promise<number[]>` — the list of allowed `pkFuncionalidade` values for this user.
 
 ### `<FuncionalidadeGuard>`
 
-Blocks rendering and redirects if the user lacks a specific permission.
+Blocks rendering and redirects if the user lacks a specific permission (`pkFuncionalidade`).
+
+> Requires `react-router-dom` for the `navigate` prop. Without it, falls back to `window.location.href`.
 
 ```tsx
 import { FuncionalidadeGuard } from "@aria-iam/react";
@@ -95,7 +128,7 @@ function ReportsPage() {
 
   return (
     <FuncionalidadeGuard
-      pkFuncionalidade={14}    // required — permission ID to check
+      pkFuncionalidade={14}    // required — numeric permission ID from ARIA
       navigate={navigate}      // optional — router navigate function
       redirectTo="/dashboard"  // optional — default: "/dashboard"
       delayMs={3000}           // optional — redirect delay in ms, default: 3000
@@ -106,8 +139,6 @@ function ReportsPage() {
   );
 }
 ```
-
-If `navigate` is not provided, falls back to `window.location.href`.
 
 ## Hooks
 
@@ -131,7 +162,7 @@ import { usePermissions } from "@aria-iam/react";
 
 const { can, allowed, loading, refresh } = usePermissions();
 
-can(14);   // boolean — check a single permission
+can(14);   // boolean — is pkFuncionalidade 14 allowed for this user?
 refresh(); // re-fetch permissions from the backend
 ```
 
@@ -142,7 +173,7 @@ Shorthand hook for a single permission check.
 ```tsx
 import { useCan } from "@aria-iam/react";
 
-const canEdit = useCan(14); // returns false while loading
+const canEdit = useCan(14); // returns false while permissions are loading
 ```
 
 ## Session namespacing (SSO / isolation)

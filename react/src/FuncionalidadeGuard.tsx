@@ -15,7 +15,7 @@ interface FuncionalidadeGuardProps {
 
 export function FuncionalidadeGuard({
   pkFuncionalidade,
-  redirectTo = "/dashboard",
+  redirectTo = "/sem-acesso",
   delayMs = 3000,
   children,
   isVisible = false,
@@ -41,6 +41,8 @@ export function FuncionalidadeGuard({
     }
   }, [isPermitido, loading, jaNoDestino, navigate, redirectTo, delayMs]);
 
+  // loading starts true in PermissionProvider — render nothing until the first
+  // fetch completes so we never redirect before permissions are known.
   if (loading) return null;
 
   if (!isPermitido) {

@@ -6,19 +6,33 @@ Adaptador Angular para a plataforma **ARIA IAM**. Disponibiliza um serviço, gua
 
 Parte do [ARIA SDK](https://github.com/SaraTuma/aria-sdk).
 
+## Pré-requisitos
+
+Antes de usar este pacote precisas de:
+
+1. Um **backend ARIA IAM** a correr e acessível (fornecido pela tua organização).
+2. Uma **aplicação registada** no painel de administração ARIA — isso dá-te:
+   - `appId` — o ID numérico da tua app no ARIA (ex.: `2`).
+   - `loginUrl` — o URL da página de login central do ARIA.
+3. **Permissões registadas** no painel ARIA para a tua app. Cada permissão tem um `pkFuncionalidade` — um ID numérico (ex.: `14`) que usas no teu código para mostrar ou esconder elementos da interface.
+
+> **Nota sobre o `appId`:** este valor é usado em duas formas diferentes. Em `AriaIamModule.forRoot()` / `ARIA_IAM_CONFIG` é uma **string** (fica guardado num cookie que diz à página de login do ARIA de que app estás a vir). Em `PermissionService.load()` e dentro da tua função `fetchPermissions`, é um **número** (é enviado ao teu backend como `pkAplicacao`). Os dois referem-se ao mesmo ID de app — só tens de manter os tipos corretos ao copiar os exemplos abaixo.
+
 ## Instalação
 
 ```bash
 npm install @aria-iam/core @aria-iam/angular
 ```
 
+> Requer Angular 15–19, rxjs 7 e TypeScript ≥ 5.0.
+
 ## Início rápido
 
 ```typescript
 // app.module.ts
 import { NgModule } from "@angular/core";
-import { HttpClientModule } from "@angular/common/http";
-import { AriaIamModule } from "@aria-iam/angular";
+import { HttpClientModule, HTTP_INTERCEPTORS } from "@angular/common/http";
+import { AriaIamModule, AuthInterceptor } from "@aria-iam/angular";
 
 @NgModule({
   imports: [
@@ -26,9 +40,12 @@ import { AriaIamModule } from "@aria-iam/angular";
     AriaIamModule.forRoot({
       apiUrl:         "https://teu-backend-aria.com",
       loginUrl:       "https://teu-painel-aria.com/login",
-      appId:          "id-da-tua-app",
-      tokenNamespace: "priv_2_minha-app",
+      appId:          "2",                  // ID da app no painel ARIA
+      tokenNamespace: "priv_2_minha-app",   // opcional — chave de isolamento de cookies
     }),
+  ],
+  providers: [
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
   ],
 })
 export class AppModule {}
@@ -43,7 +60,7 @@ const routes: Routes = [
 ];
 ```
 
-### Standalone (Angular 15+)
+## Início rápido (standalone, Angular 15+)
 
 ```typescript
 // main.ts
@@ -55,7 +72,15 @@ import { ARIA_IAM_CONFIG, AuthInterceptor } from "@aria-iam/angular";
 bootstrapApplication(AppComponent, {
   providers: [
     provideHttpClient(withInterceptorsFromDi()),
-    { provide: ARIA_IAM_CONFIG, useValue: { apiUrl: "...", loginUrl: "...", appId: "..." } },
+    {
+      provide: ARIA_IAM_CONFIG,
+      useValue: {
+        apiUrl:         "https://teu-backend-aria.com",
+        loginUrl:       "https://teu-painel-aria.com/login",
+        appId:          "2",
+        tokenNamespace: "priv_2_minha-app",
+      },
+    },
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
   ],
 });
@@ -71,7 +96,7 @@ NgModule que regista o `AuthInterceptor` e o `CanPipe` globalmente.
 AriaIamModule.forRoot({
   apiUrl:         "https://teu-backend-aria.com",       // obrigatório
   loginUrl:       "https://teu-painel-aria.com/login",  // obrigatório
-  appId:          "id-da-tua-app",                      // opcional
+  appId:          "2",                                  // opcional
   tokenNamespace: "priv_2_minha-app",                   // opcional
 })
 ```
@@ -110,18 +135,38 @@ Registado automaticamente pelo `AriaIamModule.forRoot()`. Adiciona `Authorizatio
 
 ### `PermissionService`
 
-Carrega e verifica permissões do utilizador.
+Carrega e verifica permissões do utilizador. Chama `load()` no `ngOnInit`, não no construtor.
 
 ```typescript
 import { PermissionService } from "@aria-iam/angular";
+import { HttpClient } from "@angular/common/http";
+import { firstValueFrom } from "rxjs";
 
-constructor(private permissions: PermissionService) {
-  this.permissions.load(2, (pkConta, appId) =>
-    this.minhaApi.buscarPermissoes(pkConta, appId)
-  );
+@Component({ ... })
+export class DashboardComponent {
+  constructor(
+    private permissions: PermissionService,
+    private http: HttpClient,
+  ) {}
+
+  ngOnInit() {
+    const APP_ID = 2; // ID numérico do painel de administração ARIA
+
+    this.permissions.load(APP_ID, (pkConta, appId) =>
+      firstValueFrom(
+        this.http.get<{ data: number[] }>(
+          "https://teu-backend-aria.com/conta-funcionalidade/buscar-pksfuncionalidade-conta",
+          { params: { pkConta, pkAplicacao: appId } }
+        )
+      ).then(r => r.data)
+    );
+  }
+
+  // Usar can() depois de load() ter resolvido
+  get podeEditar(): boolean {
+    return this.permissions.can(14); // 14 = pkFuncionalidade do painel ARIA
+  }
 }
-
-podeEditar = this.permissions.can(14); // boolean
 ```
 
 ### `funcionalidadeGuard(pkFuncionalidade)`

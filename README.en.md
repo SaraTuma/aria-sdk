@@ -9,17 +9,18 @@ Authentication and access-control SDK for applications that integrate with the *
 | Package | Description |
 |---|---|
 | [`@aria-iam/core`](./core) | Framework-agnostic TypeScript core — tokens, session, JWT, axios, SSO |
-| [`@aria-iam/react`](./react) | React adapter — ready-to-use providers, guards and hooks |
-
-> **Coming soon:** `@aria-iam/vue` · `@aria-iam/angular`
+| [`@aria-iam/react`](./react) | React adapter — `AuthProvider`, `ProtectedRoute`, `PermissionProvider`, `FuncionalidadeGuard` |
+| [`@aria-iam/angular`](./angular) | Angular adapter — `AuthService`, `authGuard`, `AuthInterceptor`, `CanPipe` |
+| [`@aria-iam/vue`](./vue) | Vue 3 adapter — `AriaIamPlugin`, `useAuth`, `usePermissions`, `ProtectedRoute` |
 
 ---
 
 ## Requirements
 
 - Node.js 18+
-- TypeScript 5+
-- A running instance of the [ARIA backend](https://github.com/your-org/aria-backend)
+- TypeScript 5+ — the packages are distributed as `.ts` source, so your project needs a TypeScript-aware bundler (Vite, Angular CLI, webpack + ts-loader, etc.)
+- A running instance of the ARIA backend, reachable from your app
+- An application registered in the ARIA admin panel — this is what gives you the `appId` and the `loginUrl`
 
 ---
 
@@ -31,25 +32,35 @@ Authentication and access-control SDK for applications that integrate with the *
 npm install @aria-iam/core @aria-iam/react
 ```
 
-### 2. Set up providers
+### 2. Set up the providers
 
 ```tsx
 // main.tsx
 import { AuthProvider, ProtectedRoute, PermissionProvider } from "@aria-iam/react";
-import { ContaService } from "@/services/ContaService";
+import { createAriaAxios } from "@aria-iam/core";
+
+const api = createAriaAxios({
+  apiUrl: "https://your-aria-backend.com",
+  loginUrl: "https://your-aria-panel.com/login",
+  namespace: "priv_2_my-app",
+});
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
     <AuthProvider
       apiUrl="https://your-aria-backend.com"
       loginUrl="https://your-aria-panel.com/login"
-      appId="your-app-id"
+      appId="your-app-id"          // string — stored in a cookie
       tokenNamespace="priv_2_my-app"
     >
       <PermissionProvider
-        appId={2}
+        appId={2}                  // number — sent to your API
         fetchPermissions={(pkConta, appId) =>
-          ContaService.fetchPermissions(pkConta, appId).then(r => r.data)
+          api
+            .get("/conta-funcionalidade/buscar-pksfuncionalidade-conta", {
+              params: { pkConta, pkAplicacao: appId },
+            })
+            .then(r => r.data.data as number[])
         }
       >
         <ProtectedRoute>
@@ -120,6 +131,8 @@ export default api;
 
 The client created by `createAriaAxios` automatically injects the token into every request and renews it on `401`, with no extra setup required.
 
+> Using Angular or Vue instead? See the [`@aria-iam/angular`](./angular) and [`@aria-iam/vue`](./vue) package READMEs for their own quick starts — same underlying concepts, framework-specific APIs.
+
 ---
 
 ## Session namespacing (SSO / isolation)
@@ -167,6 +180,8 @@ When running multiple apps in the same browser, use `tokenNamespace` to isolate 
 | `useAuth()` | Access `{ status, user, appId, loginUrl, tokenNamespace }` |
 | `usePermissions()` | Access `{ can, allowed, loading, refresh }` |
 | `useCan(pkFuncionalidade)` | Returns `boolean` — shorthand for `can(pk)` |
+
+See the [`@aria-iam/angular`](./angular) and [`@aria-iam/vue`](./vue) READMEs for the full reference of those adapters.
 
 ---
 

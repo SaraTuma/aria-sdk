@@ -6,11 +6,25 @@ Adaptador React para a plataforma **ARIA IAM**. Disponibiliza providers, guards 
 
 Parte do [ARIA SDK](https://github.com/SaraTuma/aria-sdk).
 
+## Pré-requisitos
+
+Antes de usar este pacote precisas de:
+
+1. Um **backend ARIA IAM** a correr e acessível (fornecido pela tua organização).
+2. Uma **aplicação registada** no painel de administração ARIA — isso dá-te:
+   - `appId` — o ID numérico da tua app no ARIA (ex.: `2`).
+   - `loginUrl` — o URL da página de login central do ARIA.
+3. **Permissões registadas** no painel ARIA para a tua app. Cada permissão tem um `pkFuncionalidade` — um ID numérico (ex.: `14`) que usas no teu código para mostrar ou esconder elementos da interface.
+
+> **Nota sobre o `appId`:** este valor é usado em duas formas diferentes. No `<AuthProvider appId>` é uma **string** (fica guardado num cookie que diz à página de login do ARIA de que app estás a vir). No `<PermissionProvider appId>` e dentro da tua função `fetchPermissions`, é um **número** (é enviado ao teu backend como `pkAplicacao`). Os dois referem-se ao mesmo ID de app — só tens de manter os tipos corretos ao copiar os exemplos abaixo.
+
 ## Instalação
 
 ```bash
 npm install @aria-iam/core @aria-iam/react
 ```
+
+> Requer React 18 ou 19 e TypeScript ≥ 5.0.
 
 ## Início rápido
 
@@ -19,20 +33,31 @@ npm install @aria-iam/core @aria-iam/react
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider, ProtectedRoute, PermissionProvider } from "@aria-iam/react";
+import { createAriaAxios } from "@aria-iam/core";
+
+const APP_ID = 2; // ID numérico do painel de administração ARIA
+const API_URL = "https://teu-backend-aria.com";
+const LOGIN_URL = "https://teu-painel-aria.com/login";
+const NS = "priv_2_minha-app"; // chave de isolamento de cookies
+
+const api = createAriaAxios({ apiUrl: API_URL, loginUrl: LOGIN_URL, namespace: NS });
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
     <AuthProvider
-      apiUrl="https://teu-backend-aria.com"
-      loginUrl="https://teu-painel-aria.com/login"
-      appId="id-da-tua-app"
-      tokenNamespace="priv_2_minha-app"
+      apiUrl={API_URL}
+      loginUrl={LOGIN_URL}
+      appId={String(APP_ID)}  // AuthProvider espera uma string (guardada num cookie)
+      tokenNamespace={NS}
     >
       <PermissionProvider
-        appId={2}
+        appId={APP_ID}
         fetchPermissions={(pkConta, appId) =>
-          fetch(`/api/permissoes?pkConta=${pkConta}&appId=${appId}`)
-            .then(r => r.json())
+          api
+            .get("/conta-funcionalidade/buscar-pksfuncionalidade-conta", {
+              params: { pkConta, pkAplicacao: appId },
+            })
+            .then(r => r.data.data as number[])
         }
       >
         <ProtectedRoute>
@@ -54,7 +79,7 @@ Valida a sessão ao carregar. Todos os outros componentes e hooks têm de estar 
 <AuthProvider
   apiUrl="https://teu-backend-aria.com"            // obrigatório — URL do backend ARIA
   loginUrl="https://teu-painel-aria.com/login"     // obrigatório — URL da página de login ARIA
-  appId="id-da-tua-app"                            // obrigatório — identificador da app no ARIA
+  appId="2"                                        // obrigatório — ID da app como string (guardado num cookie)
   tokenNamespace="priv_2_minha-app"               // opcional — chave de isolamento de cookies
 >
 ```
@@ -76,7 +101,13 @@ Carrega as permissões do utilizador para a app actual. Tem de estar dentro de `
 ```tsx
 <PermissionProvider
   appId={2}
-  fetchPermissions={(pkConta, appId) => minhaApi.buscarPermissoes(pkConta, appId)}
+  fetchPermissions={(pkConta, appId) =>
+    api
+      .get("/conta-funcionalidade/buscar-pksfuncionalidade-conta", {
+        params: { pkConta, pkAplicacao: appId },
+      })
+      .then(r => r.data.data as number[])
+  }
 >
 ```
 
@@ -84,7 +115,9 @@ Carrega as permissões do utilizador para a app actual. Tem de estar dentro de `
 
 ### `<FuncionalidadeGuard>`
 
-Bloqueia a renderização e redireciona se o utilizador não tiver uma permissão específica.
+Bloqueia a renderização e redireciona se o utilizador não tiver uma permissão específica (`pkFuncionalidade`).
+
+> Requer `react-router-dom` para a prop `navigate`. Sem ela, usa `window.location.href` como alternativa.
 
 ```tsx
 import { FuncionalidadeGuard } from "@aria-iam/react";

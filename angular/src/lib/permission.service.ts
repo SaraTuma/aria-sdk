@@ -8,9 +8,12 @@ import { AuthService } from "./auth.service";
 export class PermissionService {
   private allowedSubject = new BehaviorSubject<number[]>([]);
   private loadingSubject = new BehaviorSubject<boolean>(false);
+  // emits true once the first load() call finishes — guards must not act before this
+  private readySubject = new BehaviorSubject<boolean>(false);
 
   allowed$ = this.allowedSubject.asObservable();
   loading$ = this.loadingSubject.asObservable();
+  ready$ = this.readySubject.asObservable();
 
   constructor(
     @Inject(ARIA_IAM_CONFIG) private config: AriaIamConfig,
@@ -42,6 +45,7 @@ export class PermissionService {
         this.allowedSubject.next(await fetchPermissions(pkConta, appId));
       } finally {
         this.loadingSubject.next(false);
+        this.readySubject.next(true);
       }
     })();
     return this.loadPromise;

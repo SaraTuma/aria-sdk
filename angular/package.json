@@ -1,6 +1,6 @@
 {
   "name": "@aria-iam/angular",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "ARIA authentication Angular adapter — AuthService, authGuard, AuthInterceptor and CanPipe",
   "main": "src/index.ts",
   "types": "src/index.ts",

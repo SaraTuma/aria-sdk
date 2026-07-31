@@ -18,8 +18,9 @@ SDK de autenticação e controlo de acessos para aplicações que integram com a
 ## Requisitos
 
 - Node.js 18+
-- TypeScript 5+
-- Uma instância do [backend ARIA](https://github.com/your-org/aria-backend) a correr
+- TypeScript 5+ — os pacotes são distribuídos como código-fonte `.ts`, por isso o teu projeto tem de ter um bundler preparado para TypeScript (Vite, Angular CLI, webpack + ts-loader, etc.)
+- Uma instância do backend ARIA a correr, acessível pela tua aplicação
+- Uma aplicação cadastrada no painel de administração ARIA — é isso que te dá o `appId` e o `loginUrl`
 
 ---
 
@@ -36,21 +37,30 @@ npm install @aria-iam/core @aria-iam/react
 ```tsx
 // main.tsx
 import { AuthProvider, ProtectedRoute, PermissionProvider } from "@aria-iam/react";
-import { ContaService } from "@/services/ContaService";
+import { createAriaAxios } from "@aria-iam/core";
+
+const api = createAriaAxios({
+  apiUrl: "https://teu-backend-aria.com",
+  loginUrl: "https://teu-painel-aria.com/login",
+  namespace: "priv_2_minha-app",
+});
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
     <AuthProvider
       apiUrl="https://teu-backend-aria.com"
       loginUrl="https://teu-painel-aria.com/login"
-      appId="id-da-tua-app"
+      appId="id-da-tua-app"          // string — vai para um cookie
       tokenNamespace="priv_2_minha-app"
     >
       <PermissionProvider
-        appId={2}
+        appId={2}                    // number — vai para a tua API
         fetchPermissions={(pkConta, appId) =>
-          ContaService.buscarFuncionalidadesPorConta(pkConta, appId)
-            .then(r => r.data)
+          api
+            .get("/conta-funcionalidade/buscar-pksfuncionalidade-conta", {
+              params: { pkConta, pkAplicacao: appId },
+            })
+            .then(r => r.data.data as number[])
         }
       >
         <ProtectedRoute>
@@ -121,6 +131,8 @@ export default api;
 
 O cliente criado por `createAriaAxios` injeta o token automaticamente em cada pedido e renova-o quando recebe um `401`, sem precisar de configuração adicional.
 
+> Usas Angular ou Vue? Vê os READMEs dos pacotes [`@aria-iam/angular`](./angular) e [`@aria-iam/vue`](./vue) para o início rápido de cada um — os mesmos conceitos, com a API própria de cada framework.
+
 ---
 
 ## Namespace de sessão (SSO / isolamento)
@@ -168,6 +180,8 @@ Quando várias apps correm no mesmo browser, usa `tokenNamespace` para isolar ou
 | `useAuth()` | Acede a `{ status, user, appId, loginUrl, tokenNamespace }` |
 | `usePermissions()` | Acede a `{ can, allowed, loading, refresh }` |
 | `useCan(pkFuncionalidade)` | Retorna `boolean` — atalho para `can(pk)` |
+
+Vê os READMEs dos pacotes [`@aria-iam/angular`](./angular) e [`@aria-iam/vue`](./vue) para a referência completa desses adaptadores.
 
 ---
 
