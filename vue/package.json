@@ -1,14 +1,24 @@
 {
   "name": "@aria-iam/vue",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "ARIA authentication Vue 3 adapter — AriaIamPlugin, useAuth, usePermissions and ProtectedRoute",
-  "main": "src/index.ts",
-  "types": "src/index.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
   "files": [
+    "dist",
     "src",
     "README.pt.md"
   ],
   "scripts": {
+    "build": "vite build && vue-tsc --project tsconfig.build.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
