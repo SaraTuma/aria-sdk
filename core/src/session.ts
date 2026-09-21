@@ -6,6 +6,7 @@ import {
   clearTokens,
   cleanUrlTokens,
 } from "./tokens";
+import { getPkContaFromToken } from "./jwt";
 
 export type SessionStatus =
   | "checking"
@@ -16,6 +17,31 @@ export type SessionStatus =
 export interface SessionResult {
   status: SessionStatus;
   user: unknown;
+}
+
+/**
+ * O /auth/validate só confirma permissão sobre o recurso (um boolean); os dados da
+ * conta (nome, tipoConta, etc.) vêm daqui — a mesma API que já é usada para preencher
+ * o token no login (AuthController.buscarContaPorId).
+ */
+async function buscarContaAutenticada(
+  apiUrl: string,
+  token: string,
+  namespace?: string
+): Promise<unknown> {
+  const pkConta = getPkContaFromToken(namespace);
+  if (!pkConta) return null;
+
+  try {
+    const res = await fetch(`${apiUrl}/auth/buscar-conta-pkConta/${pkConta}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json?.data ?? null;
+  } catch {
+    return null;
+  }
 }
 
 function validateLocally(token: string, namespace?: string): SessionResult {
@@ -68,7 +94,8 @@ export async function validateSession(
         return { status: "unauthorized", user: null };
       }
 
-      return { status: "authorized", user: json?.data ?? json };
+      const user = await buscarContaAutenticada(apiUrl, token, namespace);
+      return { status: "authorized", user };
     }
 
     // Explicit rejection — token is invalid on the server

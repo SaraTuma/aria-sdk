@@ -1,6 +1,6 @@
 {
   "name": "@aria-iam/vue",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "ARIA authentication Vue 3 adapter — AriaIamPlugin, useAuth, usePermissions and ProtectedRoute",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -49,7 +49,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@aria-iam/core": "^1.0.1"
+    "@aria-iam/core": "^1.0.7"
   },
   "peerDependencies": {
     "vue": "^3.0.0",
