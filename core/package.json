@@ -1,6 +1,6 @@
 {
   "name": "@aria-iam/core",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "ARIA authentication core — framework-agnostic TypeScript SDK",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
