@@ -1,6 +1,6 @@
 {
   "name": "@aria-iam/angular",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "ARIA authentication Angular adapter — AuthService, authGuard, AuthInterceptor and CanPipe",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -9,7 +9,8 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist",
@@ -18,6 +19,7 @@
   ],
   "scripts": {
     "build": "ngc --project tsconfig.build.json",
+    "prepublishOnly": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -47,7 +49,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@aria-iam/core": "^1.0.7"
+    "@aria-iam/core": "^1.0.9"
   },
   "peerDependencies": {
     "@angular/common": ">=15.0.0",
