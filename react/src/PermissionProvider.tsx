@@ -77,3 +77,6 @@ export function useCan(pkFuncionalidade: number): boolean {
   if (loading) return false;
   return can(pkFuncionalidade);
 }
+
+/** Alias em português de usePermissions — ambos os nomes são válidos. */
+export const usePermissoes = usePermissions;

@@ -59,10 +59,27 @@ function validateLocally(token: string, namespace?: string): SessionResult {
   }
 }
 
+export interface ValidateSessionOptions {
+  namespace?: string;
+  /**
+   * Quando `true`, qualquer falha de rede ou resposta inesperada do servidor devolve
+   * `unauthorized` em vez de aceitar o token apenas com validação local (sem verificar assinatura).
+   * Por omissão é `false` para não quebrar integrações existentes, mas recomenda-se `true`
+   * em ambientes de produção onde o backend é sempre acessível.
+   */
+  strict?: boolean;
+}
+
 export async function validateSession(
   apiUrl: string,
-  namespace?: string
+  namespaceOrOptions?: string | ValidateSessionOptions
 ): Promise<SessionResult> {
+  const opts: ValidateSessionOptions =
+    typeof namespaceOrOptions === "string"
+      ? { namespace: namespaceOrOptions }
+      : (namespaceOrOptions ?? {});
+  const namespace = opts.namespace;
+  const strict = opts.strict ?? false;
   const { accessToken: tokenFromUrl, refreshToken: refreshFromUrl } =
     getTokensFromUrl(namespace);
 
@@ -104,9 +121,14 @@ export async function validateSession(
       return { status: "unauthorized", user: null };
     }
 
-    // 400 (field mismatch) or other server error — fall back to local validation
+    // 400 (field mismatch) or other server error
   } catch {
-    // Network error or CORS — fall back to local JWT validation
+    // Network error or CORS
+  }
+
+  if (strict) {
+    clearTokens(namespace);
+    return { status: "unauthorized", user: null };
   }
 
   return validateLocally(token, namespace);

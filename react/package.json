@@ -1,14 +1,24 @@
 {
   "name": "@aria-iam/react",
-  "version": "1.0.6",
+  "version": "1.0.8",
   "description": "ARIA authentication React adapter — AuthProvider, ProtectedRoute and useAuth hook",
-  "main": "src/index.ts",
-  "types": "src/index.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import":  { "types": "./dist/index.d.mts", "default": "./dist/index.mjs" },
+      "require": { "types": "./dist/index.d.ts",  "default": "./dist/index.js" }
+    },
+    "./package.json": "./package.json"
+  },
   "files": [
-    "src",
+    "dist",
     "README.pt.md"
   ],
   "scripts": {
+    "build": "tsup",
+    "prepublishOnly": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -38,12 +48,17 @@
     "access": "public"
   },
   "dependencies": {
-    "@aria-iam/core": "*"
+    "@aria-iam/core": "^1.0.9"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "@types/react": "^19.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript": ">=5.0.0"
   },
   "peerDependencies": {
-    "@types/react": "^18.0.0 || ^19.0.0",
     "react": "^18.0.0 || ^19.0.0",
-    "react-dom": "^18.0.0 || ^19.0.0",
-    "typescript": ">=5.0.0"
+    "react-dom": "^18.0.0 || ^19.0.0"
   }
 }

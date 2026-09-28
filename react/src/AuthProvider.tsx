@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { validateSession, SessionStatus } from "@aria-iam/core";
+import { validateSession } from "@aria-iam/core";
+import type { SessionStatus } from "@aria-iam/core";
 
 interface AuthContextType {
   status: SessionStatus;
