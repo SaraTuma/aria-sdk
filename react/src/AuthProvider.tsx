@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { validateSession } from "@aria-iam/core";
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
+import { validateSession, clearTokens, redirectToLogin } from "@aria-iam/core";
 import type { SessionStatus } from "@aria-iam/core";
 
 interface AuthContextType {
@@ -8,6 +8,7 @@ interface AuthContextType {
   appId: string;
   loginUrl: string;
   tokenNamespace?: string;
+  logout: () => void;
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -16,6 +17,7 @@ export const AuthContext = createContext<AuthContextType>({
   appId: "",
   loginUrl: "",
   tokenNamespace: undefined,
+  logout: () => {},
 });
 
 export const AuthProvider = ({
@@ -41,11 +43,17 @@ export const AuthProvider = ({
     });
   }, [apiUrl, tokenNamespace]);
 
-  return (
-    <AuthContext.Provider value={{ status, user, appId, loginUrl, tokenNamespace }}>
-      {children}
-    </AuthContext.Provider>
+  const logout = useCallback(() => {
+    clearTokens(tokenNamespace);
+    redirectToLogin(loginUrl, appId);
+  }, [tokenNamespace, loginUrl, appId]);
+
+  const value = useMemo(
+    () => ({ status, user, appId, loginUrl, tokenNamespace, logout }),
+    [status, user, appId, loginUrl, tokenNamespace, logout]
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => useContext(AuthContext);

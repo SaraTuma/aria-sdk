@@ -153,6 +153,8 @@ const { status, user, appId, loginUrl, tokenNamespace } = useAuth();
 // status: "checking" | "authorized" | "unauthorized" | "unauthenticated"
 ```
 
+const { status, user, logout } = useAuth();
+
 ### `usePermissions()`
 
 Access the full permissions context.
